@@ -1,0 +1,7 @@
+body      { margin:0; font:16px sans-serif; }
+header    { padding:1rem; background:#222; color:#fff; }
+nav button{ margin:0 0.5rem 0.5rem 0; padding:0.5rem 1rem; cursor:pointer; }
+nav button.active { background:#0a8ff7; color:#fff; }
+.pane     { display:none; grid-template-columns:1fr 1fr; gap:1rem; padding:1rem; }
+.pane.active { display:grid; }
+svg       { width:100%; height:300px; border:1px solid #ccc; }
