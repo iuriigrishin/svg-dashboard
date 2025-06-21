@@ -82,7 +82,7 @@
     }
 
     async function updateSquares() {
-      const url = 'https://script.google.com/macros/s/AKfycbyjPbZZJ5eoi8DAX0NmwdiHUXYLAEFAX1BFg8TE6O2f2inWnrWIiXc1eZz0AAF0Cm4N/exec';
+      const url = 'https://script.google.com/macros/s/AKfycbwUOuk4sJEQ-hC14FphgQR8mAXEDhdsPiI0wMSlfmh9eHqx7cAbADL_qULSTv5o8OS2/exec';
       try {
         const response = await fetch(url);
         const data = await response.json();
@@ -103,28 +103,3 @@
 </body>
 </html>
 
-
-<script>
-async function updateSquares() {
-  const url = 'https://script.google.com/macros/s/AKfycbyjPbZZJ5eoi8DAX0NmwdiHUXYLAEFAX1BFg8TE6O2f2inWnrWIiXc1eZz0AAF0Cm4N/exec';
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-
-    console.log("🔵 Пришёл JSON:", data);  // <=== это покажет ответ в консоли
-
-    for (const id in data) {
-      const square = document.getElementById(id);
-      if (square) {
-        square.setAttribute("fill", data[id] ? "green" : "white");
-      } else {
-        console.warn("⚠️ Нет элемента с id:", id);
-      }
-    }
-  } catch (err) {
-    console.error("🔴 Ошибка загрузки:", err);
-  }
-}
-updateSquares();
-setInterval(updateSquares, 10000);
-</script>
