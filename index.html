@@ -2,30 +2,103 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>SVG Демо</title>
+  <title>SVG с квадратами из таблицы</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    text {
+      font-size: 10px;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+  </style>
 </head>
 <body>
-  <h1>SVG-квадрат по чекбоксу из Google Таблицы</h1>
+  <h1>Карта квадратов</h1>
 
-  <svg width="200" height="200">
-    <rect id="square" x="10" y="10" width="100" height="100" fill="white" stroke="black" stroke-width="3" />
+  <svg width="760" height="180" xmlns="http://www.w3.org/2000/svg" id="main-svg">
+    <!-- Генерируем 43 квадрата в 3 ряда -->
+    <!-- Ряд 1: 1–15 -->
+    <!-- Ряд 2: 16–30 -->
+    <!-- Ряд 3: 31–43 -->
+
+    <!-- Квадраты и номера -->
+    <!-- Сгенерировано автоматически -->
+    <!-- Начало -->
+    <g id="grid">
+      <!-- ряд 1 -->
+      <!-- 1–15 -->
+      <!-- координаты по x = 10 + i * (40+10), y = 10 -->
+      <!-- все id будут square_N -->
+
+      <!-- Генерация 1–43 -->
+      <!-- Всего 3 ряда: 15, 15, 13 квадратов -->
+      <!-- row = Math.floor((n - 1)/15), col = (n - 1)%15 -->
+      <!-- если row == 2, col = n - 31 -->
+      <!-- y = 10 + row * 60 -->
+
+      <!-- row 0 -->
+      <!-- n = 1 to 15 -->
+      <!-- row 1 -->
+      <!-- n = 16 to 30 -->
+      <!-- row 2 -->
+      <!-- n = 31 to 43 -->
+
+      <!-- генерируем -->
+      <!-- ... (сделано в следующем шаге) -->
+    </g>
   </svg>
 
   <script>
-    async function updateSquare() {
+    // Автоматическая генерация 43 квадратов
+    const svgNS = "http://www.w3.org/2000/svg";
+    const grid = document.getElementById("grid");
+
+    for (let n = 1; n <= 43; n++) {
+      let row = Math.floor((n - 1) / 15);
+      let col = (row < 2) ? (n - 1) % 15 : (n - 31);
+      let x = 10 + col * 50;
+      let y = 10 + row * 60;
+
+      const rect = document.createElementNS(svgNS, "rect");
+      rect.setAttribute("id", `square_${n}`);
+      rect.setAttribute("x", x);
+      rect.setAttribute("y", y);
+      rect.setAttribute("width", 40);
+      rect.setAttribute("height", 40);
+      rect.setAttribute("fill", "white");
+      rect.setAttribute("stroke", "black");
+      rect.setAttribute("stroke-width", "2");
+
+      const label = document.createElementNS(svgNS, "text");
+      label.setAttribute("x", x + 20);
+      label.setAttribute("y", y + 20);
+      label.textContent = n;
+
+      grid.appendChild(rect);
+      grid.appendChild(label);
+    }
+
+    async function updateSquares() {
       const url = 'https://script.google.com/macros/s/AKfycbyw0yxXq-Ik7nXK7gKIfg5r-xDBvjaWI24iEPXUhDWLZNRpRW9lLrkDXhIovoj5t2hF/exec';
       try {
         const response = await fetch(url);
         const data = await response.json();
-        const square = document.getElementById("square");
-        square.setAttribute("fill", data.fillSquare ? "green" : "white");
-      } catch (e) {
-        console.error("Ошибка загрузки:", e);
+        for (const id in data) {
+          const square = document.getElementById(id);
+          if (square) {
+            square.setAttribute("fill", data[id] ? "green" : "white");
+          }
+        }
+      } catch (err) {
+        console.error("Ошибка при обновлении:", err);
       }
     }
 
-    updateSquare();               // запуск при загрузке
-    setInterval(updateSquare, 10000);  // обновление каждые 10 секунд
+    updateSquares();
+    setInterval(updateSquares, 10000);
   </script>
 </body>
 </html>
