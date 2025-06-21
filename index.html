@@ -1,27 +1,31 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <title>SVG Дашборд</title>
-  <link rel="stylesheet" href="css/styles.css">
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script defer type="module" src="js/app.js"></script>
+  <meta charset="UTF-8">
+  <title>SVG Демо</title>
 </head>
 <body>
-  <header>
-    <h1>SVG Дашборд</h1>
-    <nav id="tabs"></nav>
-  </header>
+  <h1>SVG-квадрат по чекбоксу из Google Таблицы</h1>
 
-  <!-- ВСТАВКА SVG -->
-  <section id="static-svg" style="padding: 1rem;">
-    <svg viewBox="0 0 100 100" width="100" height="100">
-      <circle id="myCircle" cx="50" cy="50" r="40" fill="red" />
-    </svg>
-  </section>
+  <svg width="200" height="200">
+    <rect id="square" x="10" y="10" width="100" height="100" fill="white" stroke="black" stroke-width="3" />
+  </svg>
 
-  <main id="panes"></main>
+  <script>
+    async function updateSquare() {
+      const url = 'https://script.google.com/macros/s/AKfycbyw0yxXq-Ik7nXK7gKIfg5r-xDBvjaWI24iEPXUhDWLZNRpRW9lLrkDXhIovoj5t2hF/exec';
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        const square = document.getElementById("square");
+        square.setAttribute("fill", data.fillSquare ? "green" : "white");
+      } catch (e) {
+        console.error("Ошибка загрузки:", e);
+      }
+    }
+
+    updateSquare();               // запуск при загрузке
+    setInterval(updateSquare, 10000);  // обновление каждые 10 секунд
+  </script>
 </body>
 </html>
-
-
