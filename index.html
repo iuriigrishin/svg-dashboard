@@ -63,13 +63,22 @@
           const square = document.getElementById(id);
           if (!square) continue;
 
-          const team1 = data[`square_${n}`];         // первая команда
-          const team2 = data[`square_${n}_team2`];   // вторая команда
+          const team1 = data[`square_${n}`];                  // первая команда (true/false)
+          const team2 = data[`square_${n}_team2`];            // вторая команда (true/false)
+          const only0_1 = data[`square_${n}_only0`] === true; // первая только 0
+          const only0_2 = data[`square_${n}_team2_only0`] === true; // вторая только 0
 
           let fill = "white";
-          if (team1 && team2) fill = "gold";         // обе команды
-          else if (team1) fill = "green";            // только первая
-          else if (team2) fill = "orange";           // только вторая
+
+          if (team1 && team2) {
+            fill = "gold";        // обе команды попали
+          } else if (team1) {
+            fill = "green";       // только первая
+          } else if (team2) {
+            fill = "orange";      // только вторая
+          } else if (only0_1 && only0_2) {
+            fill = "gray";        // обе команды поставили только 0
+          }
 
           square.setAttribute("fill", fill);
         }
