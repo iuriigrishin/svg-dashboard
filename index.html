@@ -19,48 +19,19 @@
   <h1>Карта квадратов</h1>
 
   <svg width="760" height="180" xmlns="http://www.w3.org/2000/svg" id="main-svg">
-    <!-- Генерируем 43 квадрата в 3 ряда -->
-    <!-- Ряд 1: 1–15 -->
-    <!-- Ряд 2: 16–30 -->
-    <!-- Ряд 3: 31–43 -->
-
-    <!-- Квадраты и номера -->
-    <!-- Сгенерировано автоматически -->
-    <!-- Начало -->
-    <g id="grid">
-      <!-- ряд 1 -->
-      <!-- 1–15 -->
-      <!-- координаты по x = 10 + i * (40+10), y = 10 -->
-      <!-- все id будут square_N -->
-
-      <!-- Генерация 1–43 -->
-      <!-- Всего 3 ряда: 15, 15, 13 квадратов -->
-      <!-- row = Math.floor((n - 1)/15), col = (n - 1)%15 -->
-      <!-- если row == 2, col = n - 31 -->
-      <!-- y = 10 + row * 60 -->
-
-      <!-- row 0 -->
-      <!-- n = 1 to 15 -->
-      <!-- row 1 -->
-      <!-- n = 16 to 30 -->
-      <!-- row 2 -->
-      <!-- n = 31 to 43 -->
-
-      <!-- генерируем -->
-      <!-- ... (сделано в следующем шаге) -->
-    </g>
+    <g id="grid"></g>
   </svg>
 
   <script>
-    // Автоматическая генерация 43 квадратов
+    // Генерация 43 квадратов в 3 ряда
     const svgNS = "http://www.w3.org/2000/svg";
     const grid = document.getElementById("grid");
 
     for (let n = 1; n <= 43; n++) {
-      let row = Math.floor((n - 1) / 15);
-      let col = (row < 2) ? (n - 1) % 15 : (n - 31);
-      let x = 10 + col * 50;
-      let y = 10 + row * 60;
+      const row = Math.floor((n - 1) / 15);
+      const col = (row < 2) ? (n - 1) % 15 : (n - 31);
+      const x = 10 + col * 50;
+      const y = 10 + row * 60;
 
       const rect = document.createElementNS(svgNS, "rect");
       rect.setAttribute("id", `square_${n}`);
@@ -86,12 +57,23 @@
       try {
         const response = await fetch(url);
         const data = await response.json();
-        for (const id in data) {
+
+        for (let n = 1; n <= 43; n++) {
+          const id = `square_${n}`;
           const square = document.getElementById(id);
-          if (square) {
-            square.setAttribute("fill", data[id] ? "green" : "white");
-          }
+          if (!square) continue;
+
+          const team1 = data[`square_${n}`];         // первая команда
+          const team2 = data[`square_${n}_team2`];   // вторая команда
+
+          let fill = "white";
+          if (team1 && team2) fill = "gold";         // обе команды
+          else if (team1) fill = "green";            // только первая
+          else if (team2) fill = "orange";           // только вторая
+
+          square.setAttribute("fill", fill);
         }
+
       } catch (err) {
         console.error("Ошибка при обновлении:", err);
       }
@@ -102,4 +84,3 @@
   </script>
 </body>
 </html>
-
