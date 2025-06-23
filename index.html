@@ -81,58 +81,61 @@
 </svg>
 
 <script>
-  // Начальная заливка
-  for (let i = 1; i <= 43; i++) {
-    const path = document.getElementById("path-" + i);
-    if (!path) continue;
+  document.addEventListener("DOMContentLoaded", () => {
+    // 🟡 1. Начальная заливка по диапазонам
+    for (let i = 1; i <= 43; i++) {
+      const path = document.getElementById("path-" + i);
+      if (!path) continue;
 
-    if (i >= 1 && i <= 27) {
-      path.setAttribute("fill", "#f2f2f2"); // очень светло-серый
-    } else if (i >= 28 && i <= 42) {
-      path.setAttribute("fill", "#e0e0e0"); // светло-серый
-    } else if (i === 43) {
-      path.setAttribute("fill", "#cccccc"); // чуть темнее
-    }
-  }
-
-  async function updateTasks() {
-    const url = 'https://script.google.com/macros/s/AKfycbxUkvDo_qnz6Ucm-L146Vg2rD-z-g9tSppLjuWp145n-meNIEG49VQ616l8CFtWRNiI/exec';
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-
-      for (let n = 1; n <= 43; n++) {
-        const id = "path-" + n;
-        const path = document.getElementById(id);
-        if (!path) continue;
-
-        const team1 = data["square_" + n];
-        const team2 = data["square_" + n + "_team2"];
-        const only0_1 = data["square_" + n + "_only0"] === true;
-        const only0_2 = data["square_" + n + "_team2_only0"] === true;
-
-        let fill = "white";
-
-        if (team1 && team2) {
-          fill = "gold";
-        } else if (team1) {
-          fill = "green";
-        } else if (team2) {
-          fill = "orange";
-        } else if (only0_1 && only0_2) {
-          fill = "gray";
-        }
-
-        path.setAttribute("fill", fill);
-        path.style.fill = fill;
+      if (i >= 1 && i <= 27) {
+        path.setAttribute("fill", "#f2f2f2"); // очень светло-серый
+      } else if (i >= 28 && i <= 42) {
+        path.setAttribute("fill", "#e0e0e0"); // светло-серый
+      } else if (i === 43) {
+        path.setAttribute("fill", "#cccccc"); // чуть темнее
       }
-    } catch (err) {
-      console.error("Ошибка при обновлении:", err);
     }
-  }
 
-  updateTasks();
-  setInterval(updateTasks, 10000);
+    // 🔄 2. Обновление заливки по данным с сервера
+    async function updateTasks() {
+      const url = 'https://script.google.com/macros/s/AKfycbxUkvDo_qnz6Ucm-L146Vg2rD-z-g9tSppLjuWp145n-meNIEG49VQ616l8CFtWRNiI/exec';
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        for (let n = 1; n <= 43; n++) {
+          const path = document.getElementById("path-" + n);
+          if (!path) continue;
+
+          const team1 = data["square_" + n];
+          const team2 = data["square_" + n + "_team2"];
+          const only0_1 = data["square_" + n + "_only0"] === true;
+          const only0_2 = data["square_" + n + "_team2_only0"] === true;
+
+          let fill = "white";
+
+          if (team1 && team2) {
+            fill = "gold";
+          } else if (team1) {
+            fill = "green";
+          } else if (team2) {
+            fill = "orange";
+          } else if (only0_1 && only0_2) {
+            fill = "gray";
+          }
+
+          path.setAttribute("fill", fill);
+          path.style.fill = fill;
+        }
+      } catch (err) {
+        console.error("Ошибка при обновлении:", err);
+      }
+    }
+
+    updateTasks();
+    setInterval(updateTasks, 10000);
+  });
 </script>
+
 </body>
 </html>
