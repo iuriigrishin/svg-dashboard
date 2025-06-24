@@ -12,8 +12,12 @@
     }
 
     body {
+      body {
       font-family: sans-serif;
-      padding: 20px;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      height: 100vh;
     }
     svg {
       width: 460px;
@@ -110,22 +114,47 @@
       position: relative;
       display: inline-block;
       width: 100%;
+
+    /* Левая половина экрана */
+    .left-panel {
+      width: 50%;
+      background-color: #f9f9f9;
+      padding: 20px;
+    }
+    
+    /* Правая половина экрана */
+    .right-panel {
+      width: 50%;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      position: relative;
+    }
     }
   </style>
 </head>
 <body>
-  <h1>Карта задач</h1>
-  <div class="svg-container">
-  <div class="team-info">
-    <div class="team-left">
-      <div class="team-name" id="team1-name">Загрузка...</div>
-      <div class="team-score" id="team1-score">-</div>
-    </div>
-    <div class="team-right">
-      <div class="team-name" id="team2-name">Загрузка...</div>
-      <div class="team-score" id="team2-score">-</div>
-    </div>
+  <!-- Левая половина экрана -->
+  <div class="left-panel">
+    <h2>Панель управления</h2>
+    <p>Здесь может быть другой контент</p>
   </div>
+
+  <!-- Правая половина экрана -->
+  <div class="right-panel">
+    <h1>Карта задач</h1>
+    
+    <div class="svg-container">
+      <div class="team-info">
+        <div class="team-left">
+          <div class="team-name" id="team1-name">Загрузка...</div>
+          <div class="team-score" id="team1-score">-</div>
+        </div>
+        <div class="team-right">
+          <div class="team-name" id="team2-name">Загрузка...</div>
+          <div class="team-score" id="team2-score">-</div>
+        </div>
+      </div>
   <svg data-name="Слой 2" id="_Слой_2" viewBox="0 0 845.1 470.5" xmlns="http://www.w3.org/2000/svg">  
 <g data-name=" Слой 2" id="_Слой_2-2">
 <g>
