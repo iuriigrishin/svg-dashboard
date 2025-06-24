@@ -315,6 +315,20 @@
 
     updateTasks();
     setInterval(updateTasks, 5000);
+    // Функция для автоматической подгонки границ SVG
+    function adjustSVGBounds() {
+      const svg = document.getElementById('_Слой_2');
+      const bbox = svg.getBBox(); // Получить границы всего содержимого
+      
+      // Добавить небольшие отступы
+      const padding = 20;
+      const newViewBox = `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + padding * 2} ${bbox.height + padding * 2}`;
+      
+      svg.setAttribute('viewBox', newViewBox);
+    }
+// Вызвать функцию при загрузке
+adjustSVGBounds();
+    
   </script>
 </body>
 </html>
