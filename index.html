@@ -315,19 +315,33 @@
 
     updateTasks();
     setInterval(updateTasks, 5000);
-    // Функция для автоматической подгонки границ SVG
-    // function adjustSVGBounds() {
-    //   const svg = document.getElementById('_Слой_2');
-    //   const bbox = svg.getBBox(); // Получить границы всего содержимого
+    function adjustSVGBounds() {
+      const svg = document.getElementById('_Слой_2');
+      const bbox = svg.getBBox();
       
-    //   // Добавить небольшие отступы
-    //   const padding = 20;
-    //   const newViewBox = `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + padding * 2} ${bbox.height + padding * 2}`;
+      console.log('Границы содержимого:', bbox);
       
-    //   svg.setAttribute('viewBox', newViewBox);
-    // }
-// Вызвать функцию при загрузке
-// adjustSVGBounds();
+      // Размер квадрата
+      const size = 460;
+      
+      // Центр содержимого
+      const contentCenterX = bbox.x + bbox.width / 2;
+      const contentCenterY = bbox.y + bbox.height / 2;
+      
+      console.log('Центр содержимого:', contentCenterX, contentCenterY);
+      
+      // Новые координаты для центрирования в квадрате 460x460
+      const newX = contentCenterX - size / 2;
+      const newY = contentCenterY - size / 2;
+      
+      const newViewBox = `${newX} ${newY} ${size} ${size}`;
+      console.log('Новый viewBox:', newViewBox);
+      
+      svg.setAttribute('viewBox', newViewBox);
+    }
+
+// Раскомментируйте вызов:
+adjustSVGBounds();
   </script>
 </body>
 </html>
