@@ -16,8 +16,8 @@
       padding: 20px;
     }
     svg {
-      width: auto;
-      height: 100%;
+      width: 460px;
+      height: 460px;
       border: 1px solid #ccc;
     }
     path {
@@ -316,16 +316,16 @@
     updateTasks();
     setInterval(updateTasks, 5000);
     // Функция для автоматической подгонки границ SVG
-    function adjustSVGBounds() {
-      const svg = document.getElementById('_Слой_2');
-      const bbox = svg.getBBox(); // Получить границы всего содержимого
+    // function adjustSVGBounds() {
+    //   const svg = document.getElementById('_Слой_2');
+    //   const bbox = svg.getBBox(); // Получить границы всего содержимого
       
-      // Добавить небольшие отступы
-      const padding = 20;
-      const newViewBox = `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + padding * 2} ${bbox.height + padding * 2}`;
+    //   // Добавить небольшие отступы
+    //   const padding = 20;
+    //   const newViewBox = `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + padding * 2} ${bbox.height + padding * 2}`;
       
-      svg.setAttribute('viewBox', newViewBox);
-    }
+    //   svg.setAttribute('viewBox', newViewBox);
+    // }
 // Вызвать функцию при загрузке
 adjustSVGBounds();
     
