@@ -1,161 +1,157 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Карта задач</title>
-  <style>
-    :root {
-      --tasks_opacity: 0.8;
-      --first_level_color: #E6D3B7;
-      --second_level_color: #D4D4D4;
-      --third_level_color: #F4E4BC;
-    }
+<meta charset="UTF-8">
+<title>Две карты задач</title>
 
-    body {
-      body {
-      font-family: sans-serif;
-      padding: 0;
-      margin: 0;
-      display: flex;
-      height: 100vh;
-    }
-    svg {
-      width: 460px;
-      height: 460px;
-      border: 1px solid #ccc;
-    }
-    path {
-      stroke: black;
-      stroke-width: 1;
-      cursor: pointer;
-    }
+<style>
+  /* ——— Layout ——— */
+  html,body{margin:0;height:100%;font-family:sans-serif}
+  #maps-wrapper{display:flex;height:100%}
+  .col{flex:1;display:flex;flex-direction:column;border-right:1px solid #ccc}
+  .col:last-child{border-right:none}
 
-    /* Первый уровень: path-1 до path-27 */
-    #path-1, #path-2, #path-3, #path-4, #path-5, #path-6, #path-7, #path-8, #path-9, #path-10,
-    #path-11, #path-12, #path-13, #path-14, #path-15, #path-16, #path-17, #path-18, #path-19, #path-20,
-    #path-21, #path-22, #path-23, #path-24, #path-25, #path-26, #path-27 {
-      fill: var(--first_level_color);
-      opacity: var(--tasks_opacity);
-    }
+  .map-box{
+  flex:1;
+  padding:0;                 /* само поле теперь формируется в viewBox */
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+  }
 
-    /* Второй уровень: path-28 до path-42 */
-    #path-28, #path-29, #path-30, #path-31, #path-32, #path-33, #path-34, #path-35, #path-36, #path-37,
-    #path-38, #path-39, #path-40, #path-41, #path-42 {
-      fill: var(--second_level_color);
-      opacity: var(--tasks_opacity);
-    }
+  .map-box svg{
+    width:100%;
+    height:auto;
+    border:1px solid #ccc;     /* если нужна рамка */
+    /* важное: сообщаем, что нужно сохранять пропорции */
+    preserveAspectRatio:xMidYMid meet;
+  }
 
-    #path-43 {
-      fill: var(--third_level_color);
-      opacity: var(--tasks_opacity);
-    }
 
-    /* Стили для номеров задач */
-    .task-number {
-      font-family: Arial, sans-serif;
-      font-size: 12px;
-      font-weight: bold;
-      fill: #333;
-      text-anchor: middle;
-      dominant-baseline: central;
-      pointer-events: none;
-      user-select: none;
-    }
 
-    /* Стили для информации о командах */
-/* Стили для информации о командах - компактное размещение */
-    .team-info {
-      position: relative;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 10px;
-      padding: 0;
-    }
-    
-    .team-left, .team-right {
-      position: absolute;
-      top: 10px;
-      z-index: 10;
-      background-color: rgba(255, 255, 255, 0.9);
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: 2px solid #333;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    
-    .team-left {
-      left: 10px;
-      text-align: left;
-    }
-    
-    .team-right {
-      right: 10px;
-      text-align: right;
-    }
-    
-    .team-name {
-      font-size: 14px;
-      font-weight: bold;
-      color: #333;
-      margin-bottom: 3px;
-      line-height: 1.2;
-    }
-    
-    .team-score {
-      font-size: 18px;
-      font-weight: bold;
-      color: #007bff;
-      line-height: 1;
-    }
-    
-    /* Контейнер для SVG с относительным позиционированием */
-    .svg-container {
-      position: relative;
-      display: inline-block;
-      width: 100%;
 
-    /* Левая половина экрана */
-    .left-panel {
-      width: 50%;
-      background-color: #f9f9f9;
-      padding: 20px;
-    }
-    
-    /* Правая половина экрана */
-    .right-panel {
-      width: 50%;
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-      position: relative;
-    }
-    }
-  </style>
+  .map-box svg{
+  width:100%;
+  height:100%;              /* ← главная правка */
+  border:1px solid #ccc;    /* как и раньше, если нужна рамка */
+  }
+
+
+  .tabs{display:flex;background:#f8f8f8;border-top:1px solid #ccc;overflow-x:auto}
+  .tab{padding:8px 16px;cursor:pointer;border-right:1px solid #ddd;white-space:nowrap}
+  .tab.active{background:#fff;font-weight:bold}
+
+  /* ——— Svg base colours from your original file ——— */
+  :root{
+  --tasks_opacity: 0.8;
+  --first_level_color:#E6D3B7;
+  --second_level_color:#D4D4D4;
+  --third_level_color:#F4E4BC;
+  }
+
+  /* базовые заливки */
+  #path-1,#path-2,#path-3,#path-4,#path-5,#path-6,#path-7,#path-8,#path-9,
+  #path-10,#path-11,#path-12,#path-13,#path-14,#path-15,#path-16,#path-17,
+  #path-18,#path-19,#path-20,#path-21,#path-22,#path-23,#path-24,#path-25,
+  #path-26,#path-27{
+    fill:var(--first_level_color);opacity:var(--tasks_opacity);
+  }
+  #path-28,#path-29,#path-30,#path-31,#path-32,#path-33,#path-34,#path-35,
+  #path-36,#path-37,#path-38,#path-39,#path-40,#path-41,#path-42{
+    fill:var(--second_level_color);opacity:var(--tasks_opacity);
+  }
+  #path-43{
+    fill:var(--third_level_color);opacity:var(--tasks_opacity);
+  }
+  
+
+  .task-number{
+    font-family: Arial, sans-serif;
+    font-size : 12px;
+    font-weight: bold;
+    fill: #333;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;   /* чтобы нельзя было кликнуть и выделить */
+    user-select: none;
+  }
+
+  /* ── селектор листов ── */
+  .selector{
+    position:relative;
+    background:#f8f8f8;
+    border-top:1px solid #ccc;
+    padding:4px;
+    display:flex;
+  }
+
+  .sel-btn{
+    padding:6px 12px;
+    font:14px/1 sans-serif;
+    cursor:pointer;
+    border:1px solid #ccc;
+    background:#fff;
+  }
+
+  .sel-list{
+    position:absolute;
+    bottom:100%;      /* раскрываемся ВВЕРХ */
+    left:0;
+    background:#fff;
+    border:1px solid #ccc;
+    box-shadow:0 4px 8px rgba(0,0,0,.1);
+    max-height:210px;
+    overflow-y:auto;
+    display:none;
+    z-index:20;
+  }
+
+  .sel-list .item{
+    padding:6px 12px;
+    white-space:nowrap;
+    cursor:pointer;
+  }
+
+  .sel-list .item:hover{
+    background:#eef;
+  }
+
+
+  /* общие штрихи */
+  svg{width:100%;height:auto;border:1px solid #ccc}
+  path{stroke:#000;stroke-width:1;cursor:pointer}
+
+</style>
 </head>
 <body>
-  <!-- Левая половина экрана -->
-  <div class="left-panel">
-    <h2>Панель управления</h2>
-    <p>Здесь может быть другой контент</p>
+<div id="maps-wrapper">
+  <div class="col">
+    <div id="left-map"  class="map-box"></div>
+
+    <!-- ▼ селектор слева -->
+    <div id="left-selector"  class="selector">
+      <button class="sel-btn">Sheets ▼</button>
+      <div   class="sel-list"></div>
+    </div>
   </div>
 
-  <!-- Правая половина экрана -->
-  <div class="right-panel">
-    <h1>Карта задач</h1>
-    
-    <div class="svg-container">
-      <div class="team-info">
-        <div class="team-left">
-          <div class="team-name" id="team1-name">Загрузка...</div>
-          <div class="team-score" id="team1-score">-</div>
-        </div>
-        <div class="team-right">
-          <div class="team-name" id="team2-name">Загрузка...</div>
-          <div class="team-score" id="team2-score">-</div>
-        </div>
-      </div>
-  <svg data-name="Слой 2" id="_Слой_2" viewBox="0 0 845.1 470.5" xmlns="http://www.w3.org/2000/svg">  
+  <div class="col">
+    <div id="right-map"  class="map-box"></div>
+
+    <!-- ▼ селектор справа -->
+    <div id="right-selector" class="selector">
+      <button class="sel-btn">Sheets ▼</button>
+      <div   class="sel-list"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ▾▾▾  The original SVG – exactly as in task_map_with_variables.html  ▾▾▾
+     (WITHOUT its <script> tag – everything else stays the same)          -->
+<template id="svg-template">
+  <svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">  
 <g data-name=" Слой 2" id="_Слой_2-2">
 <g>
 <g data-name=" Слой 2-2" id="_Слой_2-2">
@@ -214,7 +210,7 @@
 <!-- Номера задач -->
 <g class="task-numbers">
   <text x="250.13" y="150.94" class="task-number">1</text>
-  <text x="299.46" y="37.43" class="task-number">2</text>
+  <text x="305.5" y="55.5" class="task-number">2</text>
   <text x="296.62" y="85.86" class="task-number">3</text>
   <text x="289.34" y="116.75" class="task-number">4</text>
   <text x="291.45" y="146.04" class="task-number">5</text>
@@ -259,122 +255,155 @@
 </g>
 </g>
 </svg>
-</div>
+</template>
 
-  <script>
-    // Хранилище предыдущего состояния для отслеживания изменений
-    let previousState = {};
+<script>
+/* ============ 1. SETTINGS ============ */
+const GAS_URL       = 'https://script.google.com/macros/s/AKfycbxUkvDo_qnz6Ucm-L146Vg2rD-z-g9tSppLjuWp145n-meNIEG49VQ616l8CFtWRNiI/exec';
+const POLL_INTERVAL = 5000;   // ms
+const PAD           = 12;     // px – желаемый зазор
 
-    async function updateTasks() {
-      const url = 'https://script.google.com/macros/s/AKfycbxUkvDo_qnz6Ucm-L146Vg2rD-z-g9tSppLjuWp145n-meNIEG49VQ616l8CFtWRNiI/exec';
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-        // Обновляем информацию о командах
-        const team1NameElement = document.getElementById('team1-name');
-        const team1ScoreElement = document.getElementById('team1-score');
-        const team2NameElement = document.getElementById('team2-name');
-        const team2ScoreElement = document.getElementById('team2-score');
-        
-        if (team1NameElement && data.team1_name) {
-          team1NameElement.textContent = data.team1_name;
-        }
-        if (team1ScoreElement && data.team1_score) {
-          team1ScoreElement.textContent = data.team1_score;
-        }
-        if (team2NameElement && data.team2_name) {
-          team2NameElement.textContent = data.team2_name;
-        }
-        if (team2ScoreElement && data.team2_score) {
-          team2ScoreElement.textContent = data.team2_score;
-        }
+/* ============ 2. STATE ============ */
+const side = {
+  left : {
+    box : document.getElementById('left-map'),
+    sel : document.getElementById('left-selector'),
+    sheet:null, state:{}
+  },
+  right: {
+    box : document.getElementById('right-map'),
+    sel : document.getElementById('right-selector'),
+    sheet:null, state:{}
+  }
+};
 
-        for (let n = 1; n <= 43; n++) {
-          const id = "path-" + n;
-          const path = document.getElementById(id);
-          if (!path) continue;
+/* ============ 3. INIT ============ */
+(async function init(){
+  /* 3-a. вставляем SVG и тут же кадрируем */
+  Object.values(side).forEach(ctx=>{
+    ctx.box.appendChild(
+      document.getElementById('svg-template').content.cloneNode(true)
+    );
+    cropSvgToPaths(ctx.box.querySelector('svg'));   // ← важная строка
+  });
 
-          const team1 = data["square_" + n];
-          const team2 = data["square_" + n + "_team2"];
-          const only0_1 = data["square_" + n + "_only0"] === true;
-          const only0_2 = data["square_" + n + "_team2_only0"] === true;
+  /* 3-b. листы + селекторы */
+  const sheets = await fetchSheets();
+  buildSelector(side.left,  sheets);
+  buildSelector(side.right, sheets);
 
-          // Создаем ключ состояния для сравнения
-          const currentState = `${team1}-${team2}-${only0_1}-${only0_2}`;
-          
-          // Проверяем, изменилось ли состояние этого path
-          if (previousState[id] !== currentState) {
-            // Определяем новый цвет
-            let fill = null;
-            let useApiColor = false;
+  /* 3-c. стартовые листы */
+  side.left.sheet  = sheets[0];
+  side.right.sheet = sheets[1] || sheets[0];
 
-            if (team1 && team2) {
-              fill = "gold";
-              useApiColor = true;
-            } else if (team1) {
-              fill = "green";
-              useApiColor = true;
-            } else if (team2) {
-              fill = "orange";
-              useApiColor = true;
-            } else if (only0_1 && only0_2) {
-              fill = "gray";
-              useApiColor = true;
-            }
+  startPolling(side.left);
+  startPolling(side.right);
+})();
 
-            // Применяем изменения
-            if (useApiColor) {
-              // Используем цвет из API, убираем CSS fill
-              path.style.fill = fill;
-              path.removeAttribute("fill");
-            } else {
-              // Возвращаем к CSS стилизации, убираем inline стили
-              path.style.fill = "";
-              path.removeAttribute("fill");
-            }
+/* ── 3-a-2. функция кадрирования ───────────────────────────── */
+function cropSvgToPaths(svg){
+  const paths = svg.querySelectorAll('path');
+  if(!paths.length) return;
 
-            // Сохраняем новое состояние
-            previousState[id] = currentState;
-          }
-        }
-      } catch (err) {
-        console.error("Ошибка при обновлении:", err);
-      }
-    }
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  paths.forEach(p=>{
+    const b = p.getBBox();
+    minX = Math.min(minX, b.x);
+    minY = Math.min(minY, b.y);
+    maxX = Math.max(maxX, b.x + b.width);
+    maxY = Math.max(maxY, b.y + b.height);
+  });
 
-    updateTasks();
-    setInterval(updateTasks, 5000);
-function adjustSVGBounds() {
-  const svg = document.getElementById('_Слой_2');
-  const bbox = svg.getBBox();
-  
-  console.log('Границы содержимого:', bbox);
-  
-  // Размер квадрата
-  const size = 460;
-  
-  // Отступы для блоков команд
-  const teamBlocksMargin = 80; // отступ сверху и по бокам для блоков команд
-  
-  // Центр содержимого
-  const contentCenterX = bbox.x + bbox.width / 2;
-  const contentCenterY = bbox.y + bbox.height / 2;
-  
-  console.log('Центр содержимого:', contentCenterX, contentCenterY);
-  
-  // Новые координаты для центрирования в квадрате 460x460
-  // но с учетом места для блоков команд
-  const newX = contentCenterX - (size - teamBlocksMargin) / 2;
-  const newY = contentCenterY - (size - teamBlocksMargin) / 2;
-  
-  const newViewBox = `${newX} ${newY} ${size} ${size}`;
-  console.log('Новый viewBox:', newViewBox);
-  
-  svg.setAttribute('viewBox', newViewBox);
+  const vX = minX - PAD;
+  const vY = minY - PAD;
+  const vW = maxX - minX + PAD*2;
+  const vH = maxY - minY + PAD*2;
+
+  svg.setAttribute('viewBox', `${vX} ${vY} ${vW} ${vH}`);
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
 }
 
-// Раскомментируйте вызов:
-adjustSVGBounds();
-  </script>
+/* ============ 4. SELECTOR ============ */
+function buildSelector(ctx, sheetNames){
+  const btn  = ctx.sel.querySelector('.sel-btn');
+  const list = ctx.sel.querySelector('.sel-list');
+
+  btn.textContent = sheetNames[0] + ' ▼';
+
+  btn.onclick = () => {
+    list.style.display = (list.style.display==='block') ? 'none' : 'block';
+  };
+
+  sheetNames.forEach(name=>{
+    const it = document.createElement('div');
+    it.className = 'item';
+    it.textContent = name;
+    it.onclick = () =>{
+      ctx.sheet = name;
+      btn.textContent = name + ' ▼';
+      list.style.display='none';
+      refresh(ctx,true);
+    };
+    list.appendChild(it);
+  });
+
+  document.addEventListener('click', e=>{
+    if(!ctx.sel.contains(e.target)) list.style.display='none';
+  });
+}
+
+/* ============ 5. COMMUNICATION ============ */
+async function fetchSheets(){
+  try{
+    const r = await fetch(`${GAS_URL}?action=sheets`);
+    return await r.json();
+  }catch(err){
+    console.error('fetchSheets:', err);
+    return ['start'];
+  }
+}
+
+/* ============ 6. POLLING + PAINT ============ */
+function startPolling(ctx){
+  refresh(ctx,true);
+  setInterval(()=>refresh(ctx,false), POLL_INTERVAL);
+}
+
+async function refresh(ctx, force){
+  if(!ctx.sheet) return;
+  try{
+    const r   = await fetch(`${GAS_URL}?sheet=${encodeURIComponent(ctx.sheet)}`);
+    const dat = await r.json();
+
+    for(let n=1; n<=43; n++){
+      const path = ctx.box.querySelector(`#path-${n}`);
+      if(!path) continue;
+
+      const key = [
+        dat[`square_${n}`],
+        dat[`square_${n}_team2`],
+        dat[`square_${n}_only0`],
+        dat[`square_${n}_team2_only0`]
+      ].join('|');
+
+      if(!force && ctx.state[n] === key) continue;
+
+      let fill='';
+      if( dat[`square_${n}`] && dat[`square_${n}_team2`] )                    fill='gold';
+      else if( dat[`square_${n}`] )                                           fill='green';
+      else if( dat[`square_${n}_team2`] )                                     fill='orange';
+      else if( dat[`square_${n}_only0`] && dat[`square_${n}_team2_only0`] )   fill='gray';
+
+      path.style.fill = fill || '';
+      ctx.state[n] = key;
+    }
+  }catch(err){
+    console.error('refresh:',err);
+  }
+}
+</script>
+
+
+
 </body>
 </html>
