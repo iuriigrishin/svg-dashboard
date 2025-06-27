@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Игра на графе</title>
+<title>Две карты задач</title>
 
 <style>
   /* ——— Layout ——— */
@@ -140,22 +140,7 @@
 .scoreboard .separator{font-weight:600;}
 
 
-  /* ── bottom sheet selector bar ── */
-  .bottom-selector{
-    display:flex;
-    gap:12px;
-    justify-content:center;
-    align-items:center;
-    background:#f8f8f8;
-    border-top:1px solid #ccc;
-    padding:6px;
-    font:14px/1 sans-serif;
-  }
-  .bottom-selector select{
-    padding:4px 8px;
-  }
-
-</style>
+  </style>
 </head>
 <body>
 <div id="maps-wrapper">
@@ -303,7 +288,7 @@
    the Apps Script as a Web app (it already includes the required CORS header).
 */
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbySVk1kVzqGIbiesNqlk2t4qA9Qi8kZDxb_Loz69L02UjG3TdndWImc5MW8X2K3LfIJ/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxYuvDkjbnExJ0N6DWKAi9nG0RUFirFYws7V4K14J0arLusVpP1ptBM2fG8eFIlm9L_/exec';
 const POLL_INTERVAL = 5000;   // ms
 const PAD           = 12;     // px – желаемый зазор
 
@@ -346,25 +331,7 @@ ctx.scoreEl = ctx.box.parentElement.querySelector('.scoreboard');
 
   startPolling(side.left);
   startPolling(side.right);
-  /* 3-d. bottom selectors */
-  const selLeft  = document.getElementById('left-sheet-select');
-  const selRight = document.getElementById('right-sheet-select');
-  if(selLeft && selRight){
-    sheets.forEach(name=>{
-      const opt1=document.createElement('option');
-      opt1.value=opt1.textContent=name;
-      selLeft.appendChild(opt1);
-      const opt2=document.createElement('option');
-      opt2.value=opt2.textContent=name;
-      selRight.appendChild(opt2);
-    });
-    selLeft.value = side.left.sheet;
-    selRight.value = side.right.sheet;
-    selLeft.onchange = ()=>{ side.left.sheet = selLeft.value; refresh(side.left,true); };
-    selRight.onchange= ()=>{ side.right.sheet= selRight.value; refresh(side.right,true); };
-  }
-
-})();
+  })();
 
 /* ── 3-a-2. функция кадрирования ───────────────────────────── */
 function cropSvgToPaths(svg){
@@ -477,15 +444,5 @@ if(ctx.scoreEl){
   }
 }
 </script>
-
-
-
-
-  <!-- ▼ Bottom sheet selectors -->
-  <div id="bottom-selector" class="bottom-selector">
-    <label>Left:&nbsp;<select id="left-sheet-select"></select></label>
-    <label>Right:&nbsp;<select id="right-sheet-select"></select></label>
-  </div>
-
 </body>
 </html>
