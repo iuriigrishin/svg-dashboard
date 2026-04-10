@@ -288,8 +288,8 @@
    the Apps Script as a Web app (it already includes the required CORS header).
 */
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwsk7ECJf3gQaz0nbxhnRQ_0b4slJ2gWjE9Tv54gJDIL6tZTIYiYj5383KDDYZxOWWUZQ/exec';
-const POLL_INTERVAL = 5000;   // ms
+const GAS_URL = 'https://blue-shape-5fbb.iurkagrishin187.workers.dev';
+const POLL_INTERVAL = 2000;   // ms
 const PAD           = 12;     // px – желаемый зазор
 
 /* ============ 2. STATE ============ */
@@ -402,11 +402,22 @@ function startPolling(ctx){
   setInterval(()=>refresh(ctx,false), POLL_INTERVAL);
 }
 
+const knownVersions = {};
+
 async function refresh(ctx, force){
   if(!ctx.sheet) return;
   try{
+    // Шаг 1: быстрая проверка версии (~200мс, не читает таблицу)
+    const vr = await fetch(`${GAS_URL}?action=version&sheet=${encodeURIComponent(ctx.sheet)}`);
+    const { version } = await vr.json();
+
+    // Шаг 2: версия не изменилась — выходим, таблицу не читаем
+    if(!force && knownVersions[ctx.sheet] === version) return;
+
+    // Шаг 3: версия новая — тянем полные данные
     const r   = await fetch(`${GAS_URL}?sheet=${encodeURIComponent(ctx.sheet)}`);
     const dat = await r.json();
+    knownVersions[ctx.sheet] = version;
 
     for(let n=1; n<=43; n++){
       const path = ctx.box.querySelector(`#path-${n}`);
@@ -422,22 +433,20 @@ async function refresh(ctx, force){
       if(!force && ctx.state[n] === key) continue;
 
       let fill='';
-      if( dat[`square_${n}`] && dat[`square_${n}_team2`] )                    fill='gold';
-      else if( dat[`square_${n}`] )                                           fill='green';
-      else if( dat[`square_${n}_team2`] )                                     fill='orange';
-      else if( dat[`square_${n}_only0`] && dat[`square_${n}_team2_only0`] )   fill='gray';
+      if( dat[`square_${n}`] && dat[`square_${n}_team2`] )                   fill='gold';
+      else if( dat[`square_${n}`] )                                          fill='green';
+      else if( dat[`square_${n}_team2`] )                                    fill='orange';
+      else if( dat[`square_${n}_only0`] && dat[`square_${n}_team2_only0`] ) fill='gray';
 
       path.style.fill = fill || '';
       ctx.state[n] = key;
 
-/* --- update scoreboard --- */
-if(ctx.scoreEl){ 
-  ctx.scoreEl.querySelector('.team1').textContent  = dat.team1Name;
-  ctx.scoreEl.querySelector('.score1').textContent = dat.team1Score;
-  ctx.scoreEl.querySelector('.team2').textContent  = dat.team2Name;
-  ctx.scoreEl.querySelector('.score2').textContent = dat.team2Score;
-}
-
+      if(ctx.scoreEl){
+        ctx.scoreEl.querySelector('.team1').textContent  = dat.team1Name;
+        ctx.scoreEl.querySelector('.score1').textContent = dat.team1Score;
+        ctx.scoreEl.querySelector('.team2').textContent  = dat.team2Name;
+        ctx.scoreEl.querySelector('.score2').textContent = dat.team2Score;
+      }
     }
   }catch(err){
     console.error('refresh:',err);
