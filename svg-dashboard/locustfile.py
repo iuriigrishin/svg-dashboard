@@ -4,13 +4,27 @@ locustfile.py — Locust-тест GAS-эндпоинта + эмуляция за
   locust -f locustfile.py --headless -u 30 -r 5 -t 2m --host https://script.google.com
   locust -f locustfile.py          # веб-интерфейс на http://localhost:8089
 """
+import gevent.resolver.thread
+from gevent import config
+config.resolver = 'thread'
+
 import random
 from locust import HttpUser, task, between, events
 
+import socket
+
+_real_getaddrinfo = socket.getaddrinfo
+
+def _patched_getaddrinfo(host, port, *args, **kwargs):
+    if host == 'script.google.com':
+        # nslookup script.google.com → подставь свой IP
+        host = '192.178.202.102'
+    return _real_getaddrinfo(host, port, *args, **kwargs)
+
+socket.getaddrinfo = _patched_getaddrinfo
+
 GAS_PATH = (
-    "/macros/s/"
-    "AKfycbwsk7ECJf3gQaz0nbxhnRQ_0b4slJ2gWjE9Tv54gJDIL6tZTIYiYj5383KDDYZxOWWUZQ"
-    "/exec"
+    "macros/s/AKfycbybCg5X3SUrUwpNdBXKW1mEEtbr2vvcmMkMEe0NauXtUayPMD9XyVr1-EOSbnbzrqLS2g/exec"
 )
 SHEETS = ["Game 1", "Game 2", "Game 3", "Game 4", "Game 5"]
 
