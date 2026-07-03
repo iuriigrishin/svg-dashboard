@@ -289,7 +289,7 @@
 */
 
 const GAS_URL = 'https://blue-shape-5fbb.iurkagrishin187.workers.dev';
-const POLL_INTERVAL = 2000;   // ms
+const POLL_INTERVAL = 10000;   // ms
 const PAD           = 12;     // px – желаемый зазор
 
 /* ============ 2. STATE ============ */
@@ -386,14 +386,23 @@ function buildSelector(ctx, sheetNames){
 }
 
 /* ============ 5. COMMUNICATION ============ */
-async function fetchSheets(){
-  try{
-    const r = await fetch(`${GAS_URL}?action=sheets`);
-    return await r.json();
-  }catch(err){
-    console.error('fetchSheets:', err);
-    return ['start'];
+async function fetchWithRetry(url, retries = 3, delay = 1000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return await r.json();
+    } catch (err) {
+      console.warn(`Попытка ${i+1} не удалась:`, err);
+      if (i < retries - 1) await new Promise(r => setTimeout(r, delay * (i + 1)));
+    }
   }
+  return null;
+}
+
+async function fetchSheets() {
+  const data = await fetchWithRetry(`${GAS_URL}?action=sheets`);
+  return data || ['J1 vs J2'];
 }
 
 /* ============ 6. POLLING + PAINT ============ */
@@ -402,54 +411,35 @@ function startPolling(ctx){
   setInterval(()=>refresh(ctx,false), POLL_INTERVAL);
 }
 
-const knownVersions = {};
 
-async function refresh(ctx, force){
-  if(!ctx.sheet) return;
-  try{
-    // Шаг 1: быстрая проверка версии (~200мс, не читает таблицу)
-    const vr = await fetch(`${GAS_URL}?action=version&sheet=${encodeURIComponent(ctx.sheet)}`);
-    const { version } = await vr.json();
+async function refresh(ctx, force) {
+  if (!ctx.sheet) return;
+  try {
+    const dat = await fetchWithRetry(`${GAS_URL}?sheet=${encodeURIComponent(ctx.sheet)}`);
+    if (!dat) return;
 
-    // Шаг 2: версия не изменилась — выходим, таблицу не читаем
-    if(!force && knownVersions[ctx.sheet] === version) return;
-
-    // Шаг 3: версия новая — тянем полные данные
-    const r   = await fetch(`${GAS_URL}?sheet=${encodeURIComponent(ctx.sheet)}`);
-    const dat = await r.json();
-    knownVersions[ctx.sheet] = version;
-
-    for(let n=1; n<=43; n++){
+    for (let n = 1; n <= 43; n++) {
       const path = ctx.box.querySelector(`#path-${n}`);
-      if(!path) continue;
+      if (!path) continue;
 
-      const key = [
-        dat[`square_${n}`],
-        dat[`square_${n}_team2`],
-        dat[`square_${n}_only0`],
-        dat[`square_${n}_team2_only0`]
-      ].join('|');
-
-      if(!force && ctx.state[n] === key) continue;
-
-      let fill='';
-      if( dat[`square_${n}`] && dat[`square_${n}_team2`] )                   fill='gold';
-      else if( dat[`square_${n}`] )                                          fill='green';
-      else if( dat[`square_${n}_team2`] )                                    fill='orange';
-      else if( dat[`square_${n}_only0`] && dat[`square_${n}_team2_only0`] ) fill='gray';
+      let fill = '';
+      if (dat[`square_${n}`] && dat[`square_${n}_team2`])                   fill = 'gold';
+      else if (dat[`square_${n}`])                                           fill = 'green';
+      else if (dat[`square_${n}_team2`])                                     fill = 'orange';
+      else if (dat[`square_${n}_only0`] && dat[`square_${n}_team2_only0`])  fill = 'gray';
 
       path.style.fill = fill || '';
-      ctx.state[n] = key;
-
-      if(ctx.scoreEl){
-        ctx.scoreEl.querySelector('.team1').textContent  = dat.team1Name;
-        ctx.scoreEl.querySelector('.score1').textContent = dat.team1Score;
-        ctx.scoreEl.querySelector('.team2').textContent  = dat.team2Name;
-        ctx.scoreEl.querySelector('.score2').textContent = dat.team2Score;
-      }
     }
-  }catch(err){
-    console.error('refresh:',err);
+
+    if (ctx.scoreEl) {
+      ctx.scoreEl.querySelector('.team1').textContent  = dat.team1Name  || '';
+      ctx.scoreEl.querySelector('.score1').textContent = dat.team1Score || '';
+      ctx.scoreEl.querySelector('.team2').textContent  = dat.team2Name  || '';
+      ctx.scoreEl.querySelector('.score2').textContent = dat.team2Score || '';
+    }
+
+  } catch (err) {
+    console.error('refresh:', err);
   }
 }
 </script>
