@@ -139,6 +139,16 @@
 .scoreboard .team{font-weight:600;}
 .scoreboard .separator{font-weight:600;}
 
+.scoreboard .separator{font-weight:600;}
+
+.freshness{
+  text-align:center;
+  font-size:11px;
+  color:#888;
+  padding:2px;
+  background:#f8f8f8;
+  border-bottom:1px solid #eee;
+}
 
   </style>
 </head>
@@ -147,6 +157,7 @@
   <div class="col">
     <div class="scoreboard"><span class="team team1"></span> <span class="score score1"></span> <span class="separator">:</span> <span class="score score2"></span> <span class="team team2"></span>
 </div>
+  <div class="freshness" id="left-freshness">—</div>
     <div id="left-map"  class="map-box"></div>
 
     <!-- ▼ селектор слева -->
@@ -158,7 +169,7 @@
 
   <div class="col">
     <div class="scoreboard"><span class="team team1"></span> <span class="score score1"></span> <span class="separator">:</span> <span class="score score2"></span> <span class="team team2"></span></div>
-    
+    <div class="freshness" id="right-freshness">—</div>
     <div id="right-map"  class="map-box">
 </div>
 
@@ -297,11 +308,13 @@ const side = {
   left : {
     box : document.getElementById('left-map'),
     sel : document.getElementById('left-selector'),
+    freshEl: document.getElementById('left-freshness'),
     sheet:null, state:{}
   },
   right: {
     box : document.getElementById('right-map'),
     sel : document.getElementById('right-selector'),
+    freshEl: document.getElementById('right-freshness'),
     sheet:null, state:{}
   }
 };
@@ -436,6 +449,15 @@ async function refresh(ctx, force) {
       ctx.scoreEl.querySelector('.score1').textContent = dat.team1Score || '';
       ctx.scoreEl.querySelector('.team2').textContent  = dat.team2Name  || '';
       ctx.scoreEl.querySelector('.score2').textContent = dat.team2Score || '';
+    }
+    if (ctx.freshEl) {
+      const now = new Date();
+      const sec = now.getSeconds().toString().padStart(2,'0');
+      const min = now.getMinutes().toString().padStart(2,'0');
+      const next = new Date(Date.now() + POLL_INTERVAL);
+      const nSec = next.getSeconds().toString().padStart(2,'0');
+      const nMin = next.getMinutes().toString().padStart(2,'0');
+      ctx.freshEl.textContent = `Обновлено в ${min}:${sec} · следующее в ${nMin}:${nSec}`;
     }
 
   } catch (err) {
