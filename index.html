@@ -454,10 +454,18 @@ async function refresh(ctx, force) {
       const now = new Date();
       const sec = now.getSeconds().toString().padStart(2,'0');
       const min = now.getMinutes().toString().padStart(2,'0');
-      const next = new Date(Date.now() + POLL_INTERVAL);
-      const nSec = next.getSeconds().toString().padStart(2,'0');
-      const nMin = next.getMinutes().toString().padStart(2,'0');
-      ctx.freshEl.textContent = `Обновлено в ${min}:${sec} · следующее в ${nMin}:${nSec}`;
+      ctx.freshEl.textContent = `Обновлено в ${min}:${sec}`;
+      
+      // сбрасываем таймер следующего обновления
+      if (ctx._nextTimer) clearTimeout(ctx._nextTimer);
+      ctx._nextTimer = setTimeout(() => {
+        if (ctx.freshEl) {
+          const next = new Date();
+          const nMin = next.getMinutes().toString().padStart(2,'0');
+          const nSec = next.getSeconds().toString().padStart(2,'0');
+          ctx.freshEl.textContent = `Обновлено в ${min}:${sec} · обновляется...`;
+        }
+      }, POLL_INTERVAL);
     }
 
   } catch (err) {
