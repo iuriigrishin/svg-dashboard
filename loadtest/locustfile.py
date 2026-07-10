@@ -1,38 +1,51 @@
 """
-locustfile.py — Locust-тест GAS-эндпоинта + эмуляция записи
+locustfile.py — Locust-тест GAS-эндпоинта напрямую (мимо Cloudflare Worker) + эмуляция записи.
 Запуск:
-  locust -f locustfile.py --headless -u 30 -r 5 -t 2m --host https://script.google.com
-  locust -f locustfile.py          # веб-интерфейс на http://localhost:8089
-"""
-import gevent.resolver.thread
-from gevent import config
-config.resolver = 'thread'
+  locust -f loadtest/locustfile.py --headless -u 30 -r 5 -t 2m --host https://script.google.com
+  locust -f loadtest/locustfile.py          # веб-интерфейс на http://localhost:8089
 
+Адрес Apps Script берётся из config.appscript_exec_url() (APPSCRIPT_DEPLOYMENT_ID
+в .env); если деплой ещё не разворачивали — используется последний известный путь.
+"""
 import random
+import socket
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+import gevent.resolver.thread
+from gevent import config as gevent_config
+gevent_config.resolver = 'thread'
+
 from locust import HttpUser, task, between, events
 
-import socket
+import config
 
 _real_getaddrinfo = socket.getaddrinfo
 
+
 def _patched_getaddrinfo(host, port, *args, **kwargs):
     if host == 'script.google.com':
-        # nslookup script.google.com → подставь свой IP
+        # nslookup script.google.com → подставь свой IP, если DNS режется файрволом
         host = '192.178.202.102'
     return _real_getaddrinfo(host, port, *args, **kwargs)
 
+
 socket.getaddrinfo = _patched_getaddrinfo
 
-GAS_PATH = (
-    "macros/s/AKfycbybCg5X3SUrUwpNdBXKW1mEEtbr2vvcmMkMEe0NauXtUayPMD9XyVr1-EOSbnbzrqLS2g/exec"
+_FALLBACK_EXEC_URL = (
+    "https://script.google.com/macros/s/"
+    "AKfycbybCg5X3SUrUwpNdBXKW1mEEtbr2vvcmMkMEe0NauXtUayPMD9XyVr1-EOSbnbzrqLS2g/exec"
 )
+GAS_PATH = (config.appscript_exec_url() or _FALLBACK_EXEC_URL).replace("https://script.google.com/", "")
 SHEETS = ["Game 1", "Game 2", "Game 3", "Game 4", "Game 5"]
 
 
 class DashboardViewer(HttpUser):
     """
-    Обычный зритель — браузер с открытым index.html.
-    Делает poll каждые 5 секунд (wait_time эмулирует это).
+    Обычный зритель — браузер с открытым дашбордом.
+    Делает poll каждые несколько секунд (wait_time эмулирует это).
     """
     wait_time = between(4, 6)
 

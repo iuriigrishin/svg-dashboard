@@ -1,15 +1,24 @@
 """
-stress_test.py — тест diff-схемы: version poll каждые 2с + полные данные только при изменении
+stress_test.py — тест diff-схемы Code.gs: version poll (`?action=version`) каждые
+несколько секунд + полные данные (`?sheet=...`) только когда версия поменялась.
+Проверяет Cloudflare Worker (config.WORKER_URL), а не Apps Script напрямую —
+для нагрузки на сам GAS используйте loadtest/locustfile.py.
 """
 import asyncio
 import argparse
+import sys
 import time
 import statistics
 from dataclasses import dataclass, field
+from pathlib import Path
+
 import aiohttp
 
-GAS_URL = "https://blue-shape-5fbb.iurkagrishin187.workers.dev"
-VERSION_POLL   = 2    # секунд — как в новом index.html
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+import config
+
+GAS_URL = config.WORKER_URL
+VERSION_POLL = 2  # секунд
 
 
 @dataclass
@@ -62,13 +71,12 @@ stats = Stats()
 
 
 async def simulated_browser(session, sheet_name, duration, user_id):
-    """Эмулирует новый index.html: каждые 2с проверяет версию, при изменении тянет данные."""
+    """Эмулирует браузер: каждые VERSION_POLL секунд проверяет версию, при изменении тянет данные."""
     deadline = time.monotonic() + duration
     await asyncio.sleep(user_id * 0.07)
     known_version = None
 
     while time.monotonic() < deadline:
-        # Шаг 1: лёгкий запрос версии
         url_v = f"{GAS_URL}?action=version&sheet={sheet_name}"
         t0 = time.monotonic()
         try:
@@ -79,7 +87,6 @@ async def simulated_browser(session, sheet_name, duration, user_id):
                 stats.version_latencies.append(ms)
                 version = data.get('version')
 
-                # Шаг 2: версия изменилась — тянем полные данные
                 if version and version != known_version:
                     url_f = f"{GAS_URL}?sheet={sheet_name}"
                     t1 = time.monotonic()

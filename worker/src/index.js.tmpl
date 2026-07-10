@@ -1,0 +1,51 @@
+const GAS_URL = '__GAS_URL__';
+const CACHE_TTL = __CACHE_TTL__;
+const STALE_TTL = __STALE_TTL__; // отдаём старый кеш пока обновляется
+
+export default {
+  async fetch(request, env, ctx) {
+    const url      = new URL(request.url);
+    const cacheKey = new Request('https://cache.worker' + url.search);
+    const cache    = caches.default;
+
+    const cached = await cache.match(cacheKey);
+
+    if (cached) {
+      const age = Date.now() - Number(cached.headers.get('x-cached-at') || 0);
+
+      // Кеш свежий — отдаём сразу
+      if (age < CACHE_TTL * 1000) {
+        return addCors(cached);
+      }
+
+      // Кеш устарел — обновляем в фоне, отдаём старое немедленно
+      ctx.waitUntil(updateCache(cacheKey, cache, url.search));
+      return addCors(cached);
+    }
+
+    // Кеша нет совсем — ждём GAS
+    return await updateCache(cacheKey, cache, url.search);
+  }
+};
+
+async function updateCache(cacheKey, cache, search) {
+  const gasResp = await fetch(GAS_URL + search, { redirect: 'follow' });
+  const body    = await gasResp.text();
+
+  const response = new Response(body, {
+    headers: {
+      'Content-Type':  'application/json',
+      'Cache-Control': `public, max-age=${STALE_TTL}`,
+      'x-cached-at':   String(Date.now()),
+    }
+  });
+
+  await cache.put(cacheKey, response.clone());
+  return addCors(response);
+}
+
+function addCors(r) {
+  const res = new Response(r.body, r);
+  res.headers.set('Access-Control-Allow-Origin', '*');
+  return res;
+}

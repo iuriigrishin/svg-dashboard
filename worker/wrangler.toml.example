@@ -1,0 +1,4 @@
+name = "blue-shape-5fbb"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+account_id = "ВАШ_CLOUDFLARE_ACCOUNT_ID"

@@ -1,0 +1,165 @@
+const CACHE_TTL = __CACHE_TTL__;
+const VERSION_CACHE_TTL = __VERSION_CACHE_TTL__;
+const TEMPLATE_ID = '__TEMPLATE_ID__';
+const WORKING_ID  = '__WORKING_ID__';
+const ALLOWED_SCORE_VALUES = __ALLOWED_VALUES__;
+
+// ── GET ────────────────────────────────────────────────────────
+function doGet(e) {
+  const params = e ? e.parameter : {};
+
+  if (params.action === 'sheets')    return jsonResponse(getSheetsCached());
+  if (params.action === 'templates') return jsonResponse(getTemplateSheets());
+  if (params.action === 'version')   return jsonResponse(getVersion(params.sheet || 'start'));
+
+  const sheetName = params.sheet || 'start';
+  return jsonResponse(getSheetDataCached(sheetName));
+}
+
+// ── POST — копирование выбранных листов ────────────────────────
+function doPost(e) {
+  try {
+    const body     = JSON.parse(e.postData.contents);
+    const selected = body.sheets; // массив строк: ['Лист1', 'Лист2']
+
+    if (!Array.isArray(selected) || selected.length === 0) {
+      return jsonResponse({ ok: false, error: 'sheets array is empty' });
+    }
+
+    const source = SpreadsheetApp.openById(TEMPLATE_ID);
+    const target = SpreadsheetApp.openById(WORKING_ID);
+
+    // имена уже существующих листов — чтобы не дублировать
+    const existingNames = new Set(target.getSheets().map(s => s.getName()));
+
+    const copied = [], skipped = [], notFound = [];
+
+    selected.forEach(name => {
+      const sheet = source.getSheetByName(name);
+      if (!sheet) { notFound.push(name); return; }
+
+      if (existingNames.has(name)) { skipped.push(name); return; }
+
+      sheet.copyTo(target).setName(name);
+
+      // сбрасываем кэш для нового листа и списка листов
+      const cache = CacheService.getScriptCache();
+      cache.remove('sheet_' + name);
+      cache.remove('sheets_list');
+
+      copied.push(name);
+    });
+
+    return jsonResponse({ ok: true, copied, skipped, notFound });
+
+  } catch (err) {
+    return jsonResponse({ ok: false, error: err.message });
+  }
+}
+
+// ── список листов из таблицы-шаблона ──────────────────────────
+function getTemplateSheets() {
+  const source = SpreadsheetApp.openById(TEMPLATE_ID);
+  return source.getSheets().map(s => s.getName());
+}
+
+function onEdit(e) {
+  if (e.source.getId() !== WORKING_ID) return;
+  const cache = CacheService.getScriptCache();
+  const sheet = e.range.getSheet().getName();
+  cache.remove('sheet_' + sheet);
+  cache.remove('version_' + sheet);
+  const newVersion = String(Date.now());
+  cache.put('version_' + sheet, newVersion, VERSION_CACHE_TTL);
+  highlightNeighbors(e);
+}
+
+// Лёгкий эндпоинт — только версия, без чтения таблицы
+function getVersion(sheetName) {
+  const cache = CacheService.getScriptCache();
+  const key   = 'version_' + sheetName;
+  const v     = cache.get(key);
+  if (v) return { version: v };
+  const newV = String(Date.now());
+  cache.put(key, newV, VERSION_CACHE_TTL);
+  return { version: newV };
+}
+
+
+// ── кэш листов рабочей таблицы ────────────────────────────────
+function getSheetsCached() {
+  const cache = CacheService.getScriptCache();
+  const key   = 'sheets_list';
+  const hit   = cache.get(key);
+  if (hit) return JSON.parse(hit);
+
+  const ss    = SpreadsheetApp.openById(WORKING_ID);
+  const names = ss.getSheets().map(s => s.getName());
+  cache.put(key, JSON.stringify(names), CACHE_TTL);
+  return names;
+}
+
+// ── кэш данных листа ──────────────────────────────────────────
+function getSheetDataCached(sheetName) {
+  const cache = CacheService.getScriptCache();
+  const key   = 'sheet_' + sheetName;
+  const hit   = cache.get(key);
+  if (hit) return JSON.parse(hit);
+
+  const data = readSheetData(sheetName);
+  const ttl = CACHE_TTL + Math.floor(Math.random() * 20 - 10);
+  cache.put(key, JSON.stringify(data), ttl);
+  return data;
+}
+
+// ── реальное чтение таблицы ───────────────────────────────────
+function readSheetData(sheetName) {
+  const ss           = SpreadsheetApp.openById(WORKING_ID);
+  const currentSheet = ss.getSheetByName(sheetName);
+  if (!currentSheet) return { error: 'sheet not found' };
+
+  const all = currentSheet.getRange("A1:CK11").getValues();
+  const headers  = all[0];   // строка 1
+  const results1 = all[3];   // строка 4
+  const results2 = all[10];  // строка 11
+
+  const team1Name  = currentSheet.getRange("A2").getValue();
+  const team2Name  = currentSheet.getRange("A9").getValue();
+  const team1Score = currentSheet.getRange("D16").getValue();
+  const team2Score = currentSheet.getRange("D17").getValue();
+
+  const grouped1 = {}, grouped2 = {};
+  let lastHeader = null;
+  for (let i = 0; i < headers.length; i++) {
+    const h = headers[i];
+    if (h !== '') lastHeader = String(h);
+    if (!lastHeader) continue;
+    if (!grouped1[lastHeader]) { grouped1[lastHeader] = []; grouped2[lastHeader] = []; }
+    grouped1[lastHeader].push(String(results1[i]));
+    grouped2[lastHeader].push(String(results2[i]));
+  }
+
+  const squares = {};
+  for (const num in grouped1) {
+    const v1 = grouped1[num], v2 = grouped2[num];
+    squares[`square_${num}`]             = v1.some(v => ALLOWED_SCORE_VALUES.includes(v));
+    squares[`square_${num}_team2`]       = v2.some(v => ALLOWED_SCORE_VALUES.includes(v));
+    squares[`square_${num}_only0`]       = v1.every(v => v === '0');
+    squares[`square_${num}_team2_only0`] = v2.every(v => v === '0');
+  }
+
+  return {
+    team1Name:  String(team1Name),
+    team2Name:  String(team2Name),
+    team1Score: String(team1Score),
+    team2Score: String(team2Score),
+    ...squares
+  };
+}
+
+// ── хелпер ────────────────────────────────────────────────────
+function jsonResponse(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}

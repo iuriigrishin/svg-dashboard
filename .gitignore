@@ -1,1 +1,21 @@
+# секреты и локальная конфигурация
 .env
+service_account.json
+appsscript/.clasp.json
+worker/wrangler.toml
+
+# генерируемые файлы (рендерятся из *.tmpl при деплое)
+appsscript/src/Code.gs
+worker/src/index.js
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# node (wrangler)
+node_modules/
+
+# system
+.DS_Store
